@@ -8,9 +8,20 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Project;
+use App\Dto\CreateProjectDto;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ProjectController extends AbstractController
 {
+
+    private $validator;
+
+    // Injecting ValidatorInterface into the constructor
+    public function __construct(ValidatorInterface $validator)
+    {
+        $this->validator = $validator;
+    }
+
     // Projects function (returning a JSON response of projects retrieved from MySQL DB)
     #[Route('/projects', name: 'app_projects', methods: ['GET'])]
     public function projects(EntityManagerInterface $em): JsonResponse
@@ -75,33 +86,48 @@ class ProjectController extends AbstractController
      * curl -X POST http://localhost:8001/projects -H "Content-Type: application/json" -d '{"name":"New Project","description":"This is a new project.","contractTypeId":101,"contractSignedOn":"2024-01-01","budget":50000,"isActive":1}'
      * 
      */
-    #[Route('/projects', name: 'app_create_project', methods: ['POST'])]
-    public function createProject(Request $request, EntityManagerInterface $em): JsonResponse
+    #[Route('/projects', name: 'create_project', methods: ['POST'])]
+    public function createProject(Request $request, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
-        // Get data from the request
+        // Decode the incoming JSON request
         $data = json_decode($request->getContent(), true);
 
-        // Validate required fields
-        $requiredFields = ['name', 'description', 'contractTypeId', 'contractSignedOn', 'budget', 'isActive'];
-        foreach ($requiredFields as $field) {
-            if (!isset($data[$field])) {
-                return new JsonResponse([
-                    'status' => 'error',
-                    'message' => "Field '$field' is required.",
-                ], JsonResponse::HTTP_BAD_REQUEST);
+        // Create a new DTO and populate it with the request data
+        $createProjectDto = new CreateProjectDto();
+        $createProjectDto->setName($data['name'] ?? null);
+        $createProjectDto->setDescription($data['description'] ?? null);
+        $createProjectDto->setContractTypeId($data['contractTypeId'] ?? null);
+        $createProjectDto->setContractSignedOn($data['contractSignedOn'] ?? null);
+        $createProjectDto->setBudget($data['budget'] ?? null);
+        $createProjectDto->setIsActive($data['isActive'] ?? null);
+
+        // Validate the DTO
+        $errors = $validator->validate($createProjectDto);
+
+        // If validation fails, return errors
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
             }
+
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $errorMessages
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        // Create a new Project entity
+        // If validation passes, create the Project entity
         $project = new Project();
-        $project->setName($data['name']);
-        $project->setDescription($data['description']);
-        $project->setContractTypeId($data['contractTypeId']);
-        $project->setContractSignedOn($data['contractSignedOn']);
-        $project->setBudget($data['budget']);
-        $project->setIsActive($data['isActive']);
+        $project->setName($createProjectDto->getName());
+        $project->setDescription($createProjectDto->getDescription());
+        $project->setContractTypeId($createProjectDto->getContractTypeId());
+        $project->setContractSignedOn($createProjectDto->getContractSignedOn());
+        $project->setBudget($createProjectDto->getBudget());
+        $project->setIsActive($createProjectDto->getIsActive());
 
-        // Save the new project to the database
+        // Persist the project
         $em->persist($project);
         $em->flush();
 
