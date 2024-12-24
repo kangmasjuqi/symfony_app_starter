@@ -1,0 +1,37 @@
+# Symfony standard
+/.env
+/.env.local
+/.env.*.local
+/vendor/
+/var/
+/node_modules/
+/public/build/
+/public/bundles/
+/.idea/
+/.phpunit.result.cache
+/.vscode/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# IDE and Editor folders
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Composer
+composer.phar
+
+# PHPUnit
+phpunit.xml
+phpunit.xml.dist
+
+# Symfony
+symfony.lock
+
+# Cache and logs
+/var/cache/*
+/var/logs/*
+/var/sessions/*
