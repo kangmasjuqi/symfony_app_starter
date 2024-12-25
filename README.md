@@ -65,6 +65,15 @@ This document provides an overview of the available routes in the application, i
 
 ---
 
+### 7. Admin Login
+
+**URL**: `http://127.0.0.1:8001/login`
+
+- **Method**: GET
+- **Description**: Display Admin login form.
+
+---
+
 ## POST Request
 
 ### 1. Create a New Project
@@ -81,3 +90,10 @@ curl -X POST http://localhost:8001/projects \
   -H "Content-Type: application/json" \
   -d '{"name":"New Project","description":"This is a new project.","contractTypeId":101,"contractSignedOn":"2024-01-01","budget":50000,"isActive":1}'
 ```
+
+### 2. Admin Login
+
+**URL**: `http://127.0.0.1:8001/login`
+
+- **Method**: POST
+- **Description**: Submit request for Admin login using username & password (`sha1` algorithm).
